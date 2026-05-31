@@ -1,0 +1,15 @@
+[project]
+name = "conversational-document-q-a-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "docling>=2.96.0",
+    "langchain>=1.3.2",
+    "psycopg2>=2.9.12",
+    "pytest>=9.0.3",
+    "qdrant-client>=1.18.0",
+    "sqlalchemy>=2.0.50",
+    "streamlit>=1.58.0",
+]
