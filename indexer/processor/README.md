@@ -212,6 +212,7 @@ Each chunk includes comprehensive metadata:
     'content_type': 'text/plain',
     'original_size': 1024,  # Original document size
     'chunk_size': 987,     # This chunk's size
+    'content': 'chunk text used by LLM'
     # Additional custom metadata can be added
 }
 ```

@@ -3,7 +3,6 @@ Main FastAPI application for the Conversational Document Q&A Service.
 """
 
 import os
-from typing import Dict, List, Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import logging
@@ -13,6 +12,7 @@ from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
+from langchain.agents.middleware import SummarizationMiddleware, PIIMiddleware
 
 # Import vector store
 from vector_store import QdrantVectorStore
@@ -66,7 +66,7 @@ def retrieve_from_knowledge_base(query: str) -> str:
     
     Args:
         query: User query to search for
-        
+
     Returns:
         String representation of retrieved chunks
     """
@@ -87,12 +87,9 @@ def retrieve_from_knowledge_base(query: str) -> str:
         return f"Error retrieving information: {str(e)}"
 
 
-def get_or_create_agent(user_id: str):
+def get_or_create_agent():
     """
     Get or create an agent for a specific user.
-    
-    Args:
-        user_id: Unique identifier for the user
         
     Returns:
         Configured agent
@@ -101,7 +98,7 @@ def get_or_create_agent(user_id: str):
     tools = [retrieve_from_knowledge_base]
     
     # Initialize LLM
-    model = init_chat_model("ollama:gemma4:31b-cloud")  # Using llama3 as default, can be parameterized
+    model = init_chat_model("ollama:gemma4:31b-cloud")  # Using gemma4:31b-cloud as default, can be parameterized
     
     # Create agent
     agent = create_agent(
@@ -112,6 +109,18 @@ def get_or_create_agent(user_id: str):
                       "Always make use of the tool, when answering. You must always provide grounded answers. If the"
                       "information from the tool is insufficient, state that the retrieved info is insufficient"
                       "and then try to navigate the use how to phrase the questions better.",
+        middleware=[
+            SummarizationMiddleware(
+                model="ollama:gemma4:31b-cloud",
+                trigger=("tokens", 2000),
+                keep=("messages", 10),
+            ),
+            PIIMiddleware(
+                pii_type="email",
+                strategy="redact",
+                apply_to_input=True,
+            )
+        ]
     )
     
     return agent
@@ -136,7 +145,7 @@ async def invoke(request: InvokeRequest):
     """
     try:
         # Get or create agent for user
-        agent = get_or_create_agent(request.user_id)
+        agent = get_or_create_agent()
         
         # Configuration for the agent with thread_id for memory
         config = {"configurable": {"thread_id": request.user_id}}
