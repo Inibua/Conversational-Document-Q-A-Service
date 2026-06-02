@@ -13,3 +13,5 @@ The frontend provides a simple UI to interact with the llm functionality provide
    * Should pass a dummy session_id and user_id that the backend can use to manage sessions and chat history
    * The session_id and user_id can be randomly generated, but can also be hard coded to simulate chat resume
 
+# TechStack:
+Python, Chainlit, 

@@ -10,6 +10,7 @@ from indexer.collector.base import Collector
 from indexer.processor.base import Processor
 from indexer.storer.base import Storer
 from indexer.orchestrator.base import Orchestrator
+from paths import ROOT_DIR
 
 
 class BasicOrchestrator(Orchestrator):
@@ -116,14 +117,14 @@ class BasicOrchestrator(Orchestrator):
                 'qdrant_host': self.config.get('storer', {}).get('qdrant_host', 'localhost'),
                 'qdrant_port': self.config.get('storer', {}).get('qdrant_port', 6333),
                 'collection_name': self.config.get('storer', {}).get('collection_name', 'documents'),
-                'vector_size': self.config.get('storer', {}).get('vector_size', 768)
+                'vector_size': self.config.get('storer', {}).get('vector_size', 384)
             }
             self.vector_store = QdrantVectorStore(vector_store_config)
         
         # Create discoverer
         discoverer_config = {
-            'root_path': self.config.get('discoverer', {}).get('root_path', 'data_to_ingest'),
-            'file_extensions': self.config.get('discoverer', {}).get('file_extensions', ['.txt', '.md', '.pdf', '.docx']),
+            'root_path': self.config.get('discoverer', {}).get('root_path', f'{ROOT_DIR}/data_to_ingest'),
+            'file_extensions': self.config.get('discoverer', {}).get('file_extensions', ['.md']),
             'exclude_patterns': self.config.get('discoverer', {}).get('exclude_patterns', ['.git', '__pycache__']),
             'db_session': self.db_session
         }
@@ -141,8 +142,8 @@ class BasicOrchestrator(Orchestrator):
         
         # Create processor
         processor_config = {
-            'chunk_size': self.config.get('processor', {}).get('chunk_size', 1000),
-            'chunk_overlap': self.config.get('processor', {}).get('chunk_overlap', 200),
+            'chunk_size': self.config.get('processor', {}).get('chunk_size', 300),
+            'chunk_overlap': self.config.get('processor', {}).get('chunk_overlap', 50),
             'supported_content_types': self.config.get('processor', {}).get('supported_content_types', [
                 'text/plain', 'text/markdown', 'application/pdf'
             ]),
@@ -160,7 +161,7 @@ class BasicOrchestrator(Orchestrator):
         return discoverer, collector, processor, storer
 
 
-def create_orchestrator(config: Dict, db_session=None, vector_store=None) -> Orchestrator:
+def create_orchestrator(config: Optional[Dict] = None, db_session=None, vector_store=None) -> Orchestrator:
     """
     Factory function to create an appropriate orchestrator instance.
     
@@ -175,3 +176,8 @@ def create_orchestrator(config: Dict, db_session=None, vector_store=None) -> Orc
     # For now, always return BasicOrchestrator
     # This can be extended to support different orchestrator types
     return BasicOrchestrator(config, db_session, vector_store)
+
+
+if __name__ == "__main__":
+    orch = create_orchestrator({})
+    orch.run()

@@ -36,8 +36,8 @@ class DocumentProcessor(Processor):
             db_session: SQLAlchemy database session
         """
         super().__init__(config, db_session)
-        self.chunk_size = config.get('chunk_size', 1000)  # Default: 1000 characters
-        self.chunk_overlap = config.get('chunk_overlap', 200)  # Default: 200 characters
+        self.chunk_size = config.get('chunk_size', 300)  # Default: 300 characters
+        self.chunk_overlap = config.get('chunk_overlap', 50)  # Default: 50 characters
         self.supported_content_types = config.get('supported_content_types', [
             'text/plain', 'text/markdown', 'application/pdf',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

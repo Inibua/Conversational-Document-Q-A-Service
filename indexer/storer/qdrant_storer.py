@@ -123,6 +123,7 @@ class QdrantStorer(Storer):
             'processed_at': processed_chunk.get('processed_at', datetime.now().isoformat()),
             'status': processed_chunk.get('status', 'processed'),
             'chunk_size': len(processed_chunk.get('content', '')),
+            'content': processed_chunk.get('content', '')
         }
         
         # Add any additional metadata from the chunk

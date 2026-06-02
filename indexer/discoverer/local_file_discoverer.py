@@ -8,8 +8,8 @@ import os
 import logging
 from typing import List, Dict
 from datetime import datetime
-from pathlib import Path
-from .base import Discoverer, DocumentMetadata
+from indexer.discoverer.base import Discoverer, DocumentMetadata
+from paths import ROOT_DIR
 
 
 class LocalFileDiscoverer(Discoverer):
@@ -32,8 +32,8 @@ class LocalFileDiscoverer(Discoverer):
             db_session: SQLAlchemy database session
         """
         super().__init__(config, db_session)
-        self.root_path = config.get('root_path', '.')
-        self.file_extensions = config.get('file_extensions', ['.pdf'])
+        self.root_path = config.get('root_path', ROOT_DIR)
+        self.file_extensions = config.get('file_extensions', ['.md'])
         self.exclude_patterns = config.get('exclude_patterns', [])
         
         self.logger = logging.getLogger(f"{__name__}.LocalFileDiscoverer")

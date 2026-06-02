@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance, Filter, FieldCondition, MatchValue
 import uuid
+from fastembed import TextEmbedding
 from .base import VectorStore
 
 
@@ -42,6 +43,7 @@ class QdrantVectorStore(VectorStore):
         
         # Initialize Qdrant client
         self.client = QdrantClient(host=self.host, port=self.port)
+        self.dense_embedder = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
         
         # Initialize collection if it doesn't exist
         self._init_collection()
@@ -73,10 +75,6 @@ class QdrantVectorStore(VectorStore):
         """
         Embed a piece of text using the configured embedding algorithm.
         
-        For this implementation, we'll assume the embedding is done externally
-        and this method is a placeholder. In a real implementation, this would
-        call the actual embedding model.
-        
         Args:
             text: Text to embed
             
@@ -84,20 +82,21 @@ class QdrantVectorStore(VectorStore):
             List of floats representing the embedding vector
         """
         self.logger.debug(f"Embedding text: {text[:50]}...")
-        
-        # Placeholder implementation - in a real scenario, this would call
-        # the actual embedding model (e.g., SentenceTransformer, OpenAI, etc.)
-        # For now, we return a dummy vector of the correct size
-        # In practice, you would use self.embedding_model.encode(text)
-        
-        # This is where you would integrate with your actual embedding model
-        # For example, if using sentence-transformers:
-        # from sentence_transformers import SentenceTransformer
-        # model = SentenceTransformer(self.embedding_model)
-        # return model.encode(text).tolist()
-        
-        self.logger.warning("embed_text is a placeholder - implement with actual embedding model")
-        return [0.0] * self.vector_size  # Dummy vector
+        return next(self.dense_embedder.embed(text))
+
+    def embed_query(self, query: str) -> List[float]:
+        """
+        Embed a user query using the configured embedding algorithm.
+
+        Args:
+            query: Text to embed
+
+        Returns:
+            List of floats representing the embedding vector
+        """
+        self.logger.debug(f"Embedding query: {query[:50]}...")
+
+        return next(self.dense_embedder.query_embed(query))
     
     def insert_entry(self, 
                     vectors: List[List[float]], 
@@ -137,7 +136,8 @@ class QdrantVectorStore(VectorStore):
             # Insert points into Qdrant
             self.client.upsert(
                 collection_name=self.collection_name,
-                points=points
+                points=points,
+                wait=True
             )
             
             self.logger.info(f"Inserted {len(points)} entries into collection: {self.collection_name}")
@@ -210,7 +210,7 @@ class QdrantVectorStore(VectorStore):
         
         try:
             # Embed the query
-            query_vector = self.embed_text(query)
+            query_vector = self.embed_query(query)
             
             # Perform vector search using the current Qdrant API
             search_result = self.client.query_points(

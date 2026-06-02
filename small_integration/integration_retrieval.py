@@ -7,7 +7,7 @@ import os
 import sys
 
 # Add the project root to Python path
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../examples'))
 
 from vector_store.qdrant_vector_store import QdrantVectorStore
 
@@ -21,7 +21,7 @@ def main():
         'qdrant_host': 'localhost',
         'qdrant_port': 6333,
         'collection_name': 'documents',
-        'vector_size': 768
+        'vector_size': 384
     }
     
     try:
